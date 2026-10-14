@@ -37,8 +37,18 @@ Route::get('/items/{item}', [ItemController::class, 'show'])
 */
 
 Route::middleware(['auth', 'admin'])->group(function () {
-    Route::get('/admin/reports', [ReportController::class, 'adminIndex'])->name('admin.reports.index');
-    Route::patch('/admin/reports/{report}', [ReportController::class, 'update'])->whereNumber('report')->name('admin.reports.update');
+    // Admin dashboard
+    Route::get('/admin/dashboard', function () {
+        return view('admin.dashboard');
+    })->name('admin.dashboard');
+
+    // Manage reports
+    Route::get('/admin/reports', [ReportController::class, 'adminIndex'])
+        ->name('admin.reports.index');
+
+    Route::patch('/admin/reports/{report}', [ReportController::class, 'update'])
+        ->whereNumber('report')
+        ->name('admin.reports.update');
 });
 
 
