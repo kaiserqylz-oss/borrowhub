@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Item;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use RuntimeException;
 use Throwable;
 
@@ -19,7 +19,11 @@ class ItemController extends Controller
     {
         $validated = $request->validate([
             'search' => ['nullable', 'string', 'max:100'],
-            'category_id' => ['nullable', 'integer', Rule::exists('categories', 'id')->where('status', 'active')],
+            'category_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('categories', 'id')->where('status', 'active'),
+            ],
         ]);
 
         $query = Item::with(['owner', 'category'])
@@ -29,7 +33,6 @@ class ItemController extends Controller
             $query->where('owner_id', '!=', auth()->id());
         }
 
-        // Search by item name or description.
         if ($request->filled('search')) {
             $search = $request->search;
 
@@ -39,7 +42,6 @@ class ItemController extends Controller
             });
         }
 
-        // Filter by category.
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->category_id);
         }
@@ -58,10 +60,8 @@ class ItemController extends Controller
      */
     public function show(Item $item)
     {
-        // Load the item's owner and category.
         $item->load(['owner', 'category']);
 
-        // Do not display inactive items to the public.
         if ($item->status !== 'available') {
             abort(404);
         }
@@ -106,7 +106,11 @@ class ItemController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'category_id' => ['required', 'integer', Rule::exists('categories', 'id')->where('status', 'active')],
+            'category_id' => [
+                'required',
+                'integer',
+                Rule::exists('categories', 'id')->where('status', 'active'),
+            ],
             'description' => ['required', 'string', 'max:10000'],
             'condition' => ['required', 'in:new,like_new,good,fair,poor'],
             'location' => ['required', 'string', 'max:255'],
@@ -114,12 +118,18 @@ class ItemController extends Controller
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
 
-        $imagePath = $request->file('image')?->store('items', 'public');
-        if ($request->hasFile('image') && ! $imagePath) {
-            throw new RuntimeException('The item image could not be stored.');
+        $imagePath = null;
+
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('items', 'supabase');
+
+            if (! $imagePath) {
+                throw new RuntimeException('The item image could not be stored in Supabase.');
+            }
         }
 
         unset($validated['image']);
+
         $validated['owner_id'] = $request->user()->id;
         $validated['status'] = 'available';
         $validated['image_path'] = $imagePath;
@@ -128,14 +138,17 @@ class ItemController extends Controller
             Item::create($validated);
         } catch (Throwable $exception) {
             if ($imagePath) {
-                Storage::disk('public')->delete($imagePath);
+                Storage::disk('supabase')->delete($imagePath);
             }
 
             throw $exception;
         }
 
-        return redirect()->route('items.index')->with('success', 'Item listed successfully.');
+        return redirect()
+            ->route('items.index')
+            ->with('success', 'Item listed successfully.');
     }
+
     /**
      * Update an existing item.
      */
@@ -145,7 +158,11 @@ class ItemController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'category_id' => ['required', 'integer', Rule::exists('categories', 'id')->where('status', 'active')],
+            'category_id' => [
+                'required',
+                'integer',
+                Rule::exists('categories', 'id')->where('status', 'active'),
+            ],
             'description' => ['required', 'string', 'max:10000'],
             'condition' => ['required', 'in:new,like_new,good,fair,poor'],
             'location' => ['required', 'string', 'max:255'],
@@ -155,14 +172,18 @@ class ItemController extends Controller
         ]);
 
         $oldImagePath = $item->image_path;
-        $removeImage = (bool) ($validated['remove_image'] ?? false);
-        unset($validated['image'], $validated['remove_image']);
-        $newImagePath = $request->file('image')?->store('items', 'public');
-        if ($request->hasFile('image') && ! $newImagePath) {
-            throw new RuntimeException('The item image could not be stored.');
-        }
+        $removeImage = $request->boolean('remove_image');
+        $newImagePath = null;
 
-        if ($newImagePath) {
+        unset($validated['image'], $validated['remove_image']);
+
+        if ($request->hasFile('image')) {
+            $newImagePath = $request->file('image')->store('items', 'supabase');
+
+            if (! $newImagePath) {
+                throw new RuntimeException('The replacement image could not be stored in Supabase.');
+            }
+
             $validated['image_path'] = $newImagePath;
         } elseif ($removeImage) {
             $validated['image_path'] = null;
@@ -172,18 +193,21 @@ class ItemController extends Controller
             $item->update($validated);
         } catch (Throwable $exception) {
             if ($newImagePath) {
-                Storage::disk('public')->delete($newImagePath);
+                Storage::disk('supabase')->delete($newImagePath);
             }
 
             throw $exception;
         }
 
         if (($newImagePath || $removeImage) && $oldImagePath) {
-            Storage::disk('public')->delete($oldImagePath);
+            Storage::disk('supabase')->delete($oldImagePath);
         }
 
-        return redirect()->route('items.index')->with('success', 'Item updated successfully.');
+        return redirect()
+            ->route('items.index')
+            ->with('success', 'Item updated successfully.');
     }
+
     /**
      * Reactivate an item.
      */
