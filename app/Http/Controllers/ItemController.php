@@ -148,7 +148,7 @@ class ItemController extends Controller
             ->route('items.index')
             ->with('success', 'Item listed successfully.');
     }
-    
+
     /**
      * Show the form for editing an existing item.
      */
@@ -223,7 +223,23 @@ class ItemController extends Controller
     }
 
     /**
-     * Reactivate an item.
+     * Deactivate an item listing.
+     */
+    public function deactivate(Item $item)
+    {
+        abort_if($item->owner_id !== auth()->id(), 403);
+
+        $item->update([
+            'status' => 'inactive',
+        ]);
+
+        return redirect()
+            ->route('items.index')
+            ->with('success', 'Item deactivated successfully.');
+    }
+
+    /**
+     * Reactivate an item listing.
      */
     public function activate(Item $item)
     {
