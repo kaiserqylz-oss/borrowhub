@@ -23,10 +23,7 @@ class ItemController extends Controller
         ]);
 
         $query = Item::with(['owner', 'category'])
-            ->where('status', 'available')
-            ->whereDoesntHave('borrowRequests', fn ($requests) => $requests
-                ->where('status', 'approved')
-                ->whereHas('transaction', fn ($transaction) => $transaction->where('status', 'active')));
+            ->where('status', 'available');
 
         if (auth()->check()) {
             $query->where('owner_id', '!=', auth()->id());
