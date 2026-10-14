@@ -148,6 +148,20 @@ class ItemController extends Controller
             ->route('items.index')
             ->with('success', 'Item listed successfully.');
     }
+    
+    /**
+     * Show the form for editing an existing item.
+     */
+    public function edit(Item $item)
+    {
+        abort_if($item->owner_id !== auth()->id(), 403);
+
+        $categories = Category::where('status', 'active')
+            ->orderBy('name')
+            ->get();
+
+        return view('items.edit', compact('item', 'categories'));
+    }
 
     /**
      * Update an existing item.
