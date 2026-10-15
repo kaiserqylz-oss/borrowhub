@@ -1,4 +1,3 @@
-
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
@@ -8,7 +7,6 @@
 
     <div class="py-12">
         <div class="max-w-2xl mx-auto sm:px-6 lg:px-8">
-
             <div class="bg-white shadow-sm sm:rounded-lg p-6">
 
                 <h3 class="text-lg font-bold text-gray-900">
@@ -48,7 +46,9 @@
                         />
 
                         @error('start_date')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            <p class="mt-1 text-sm text-red-600">
+                                {{ $message }}
+                            </p>
                         @enderror
                     </div>
 
@@ -62,14 +62,16 @@
                             type="date"
                             id="end_date"
                             name="end_date"
-                            min="{{ now()->toDateString() }}"
+                            min="{{ old('start_date', now()->toDateString()) }}"
                             value="{{ old('end_date') }}"
                             required
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                         />
 
                         @error('end_date')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            <p class="mt-1 text-sm text-red-600">
+                                {{ $message }}
+                            </p>
                         @enderror
                     </div>
 
@@ -89,7 +91,61 @@
                         >{{ old('message') }}</textarea>
 
                         @error('message')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            <p class="mt-1 text-sm text-red-600">
+                                {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
+
+                    <div class="border border-gray-200 rounded-md p-4">
+                        <h4 class="font-semibold text-gray-900">
+                            Borrowing Agreement
+                        </h4>
+
+                        <p class="mt-2 text-sm text-gray-600">
+                            Before submitting your request, read and agree to
+                            the rules governing item borrowing, cancellations,
+                            returns, damage, and disputes.
+                        </p>
+
+                        <div class="mt-3 flex items-start gap-3">
+                            <input
+                                type="checkbox"
+                                id="agreement_accepted"
+                                name="agreement_accepted"
+                                value="1"
+                                {{ old('agreement_accepted') ? 'checked' : '' }}
+                                required
+                                class="mt-1 rounded border-gray-300 text-blue-600 shadow-sm"
+                            />
+
+                            <label for="agreement_accepted"
+                                   class="text-sm text-gray-700">
+                                I have read and agree to the
+                                <a
+                                    href="{{ route('rules') }}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="text-blue-600 underline hover:text-blue-800"
+                                >
+                                    Rules and Regulations
+                                </a>
+                                and the
+                                <a
+                                    href="{{ route('borrowing-agreement') }}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="text-blue-600 underline hover:text-blue-800"
+                                >
+                                    Borrowing Agreement and Transaction Rules
+                                </a>.
+                            </label>
+                        </div>
+
+                        @error('agreement_accepted')
+                            <p class="mt-2 text-sm text-red-600">
+                                {{ $message }}
+                            </p>
                         @enderror
                     </div>
 

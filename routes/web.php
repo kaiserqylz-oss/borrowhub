@@ -20,6 +20,11 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
+Route::view('/rules', 'legal.rules')->name('rules');
+
+Route::view('/borrowing-agreement', 'legal.borrowing-agreement')
+    ->name('borrowing-agreement');
+
 // Browse available items
 Route::get('/browse', [ItemController::class, 'browse'])
     ->name('items.browse');

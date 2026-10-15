@@ -29,6 +29,7 @@ class BorrowRequestController extends Controller
     {
         abort_unless($item->status === 'available', 404);
 
+        // Users cannot borrow their own items.
         abort_if($item->owner_id === auth()->id(), 403);
 
         $validated = $request->validate([
@@ -47,6 +48,12 @@ class BorrowRequestController extends Controller
                 'string',
                 'max:1000',
             ],
+            'agreement_accepted' => [
+                'accepted',
+            ],
+        ], [
+            'agreement_accepted.accepted' =>
+                'You must accept the Rules and Regulations and Borrowing Agreement before submitting your request.',
         ]);
 
         $startDate = Carbon::parse($validated['start_date']);
@@ -67,6 +74,7 @@ class BorrowRequestController extends Controller
             'total_amount' => $totalAmount,
             'message' => $validated['message'] ?? null,
             'status' => 'pending',
+            'agreement_accepted_at' => now(),
         ]);
 
         return redirect()

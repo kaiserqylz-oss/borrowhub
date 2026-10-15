@@ -21,6 +21,7 @@ class BorrowRequest extends Model
         'requested_at',
         'approved_at',
         'rejected_at',
+        'agreement_accepted_at',
     ];
 
     protected $casts = [
@@ -29,6 +30,7 @@ class BorrowRequest extends Model
         'requested_at' => 'datetime',
         'approved_at' => 'datetime',
         'rejected_at' => 'datetime',
+        'agreement_accepted_at' => 'datetime',
         'total_amount' => 'decimal:2',
     ];
 
